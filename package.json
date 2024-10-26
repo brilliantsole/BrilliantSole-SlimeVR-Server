@@ -1,0 +1,23 @@
+{
+  "name": "brilliantsole-slimevr-server",
+  "version": "0.0.1",
+  "main": "server.js",
+  "repository": "https://github.com/brilliantsole/SlimeVR-Server.git",
+  "author": "Zack Qattan <zack@brilliantsole.com>",
+  "license": "MIT",
+  "homepage": "https://www.runonbrilliantsole.com/",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "brilliantsole": "^0.0.18",
+    "express": "^4.21.0",
+    "ip": "^2.0.1",
+    "three": "^0.169.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}
