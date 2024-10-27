@@ -194,8 +194,8 @@ devicePair.addEventListener("deviceSensorData", (event) => {
         quaternion.premultiply(inverseGameRotation[side]);
         latestGameRotation[side].copy(event.message.gameRotation);
 
-        const { w, x, y, z } = quaternion;
-        trackerQuaternions[side] = new Quaternion(x, y, z, w);
+        const { x, y, z, w } = quaternion;
+        trackerQuaternions[side] = new Quaternion(z, x, -w, y);
       }
       isRotation = true;
       break;
@@ -206,8 +206,8 @@ devicePair.addEventListener("deviceSensorData", (event) => {
         quaternion.premultiply(inverseRotation[side]);
         latestRotation[side].copy(event.message.rotation);
 
-        const { w, x, y, z } = quaternion;
-        trackerQuaternions[side] = new Quaternion(x, y, z, w);
+        const { x, y, z, w } = quaternion;
+        trackerQuaternions[side] = new Quaternion(z, x, -w, y);
       }
       isRotation = true;
       break;
@@ -226,6 +226,7 @@ devicePair.addEventListener("deviceSensorData", (event) => {
       console.log("no trackerQuaternion defined");
       return;
     }
+    //permuteQuaternion(trackerQuaternion);
 
     const trackerSensor = trackerSensors[side];
     if (!trackerSensor) {
@@ -235,3 +236,98 @@ devicePair.addEventListener("deviceSensorData", (event) => {
     trackerSensor.sendRotation(RotationDataType.NORMAL, trackerQuaternion, 0);
   }
 });
+
+// function generateSignVariations(arr) {
+//   let signVariations = [];
+
+//   function helper(subset, index) {
+//     if (index === arr.length) {
+//       signVariations.push(subset.slice());
+//       return;
+//     }
+
+//     // Include the positive version of the current element
+//     subset.push(arr[index]);
+//     helper(subset, index + 1);
+//     subset.pop();
+
+//     // Include the negative version of the current element
+//     subset.push(-arr[index]);
+//     helper(subset, index + 1);
+//     subset.pop();
+//   }
+
+//   helper([], 0);
+//   return signVariations;
+// }
+
+// function permute(arr) {
+//   let permutations = [];
+
+//   function generate(currentPermutation, remainingElements) {
+//     if (remainingElements.length === 0) {
+//       permutations.push(currentPermutation.slice());
+//       return;
+//     }
+
+//     for (let i = 0; i < remainingElements.length; i++) {
+//       let nextElement = remainingElements[i];
+//       currentPermutation.push(nextElement);
+//       generate(currentPermutation, remainingElements.slice(0, i).concat(remainingElements.slice(i + 1)));
+//       currentPermutation.pop();
+//     }
+//   }
+
+//   generate([], arr);
+//   return permutations;
+// }
+
+// function generateAllCombinationsWithPermutations(arr) {
+//   let signVariations = generateSignVariations(arr);
+//   let allPermutations = [];
+
+//   signVariations.forEach((variation) => {
+//     let perms = permute(variation);
+//     allPermutations.push(...perms);
+//   });
+
+//   return allPermutations;
+// }
+
+// const input = [1, 2, 3, 4];
+// const arrangements = generateAllCombinationsWithPermutations(input);
+// //console.log(arrangements);
+
+// let arrangementIndex = 37;
+// function offsetIndex(offset) {
+//   arrangementIndex += offset;
+//   console.log({ arrangementIndex });
+// }
+// //console.log(arrangements[arrangementIndex]);
+
+// function permuteQuaternion(quaternion) {
+//   const { x, y, z, w } = quaternion;
+//   const p1 = [x, y, z, w];
+//   const permutation = arrangements[arrangementIndex];
+//   const p2 = permutation.map((value) => {
+//     const sign = Math.sign(value);
+//     const index = Math.abs(value) - 1;
+//     return p1[index] * sign;
+//   });
+//   quaternion.x = p2[0];
+//   quaternion.y = p2[1];
+//   quaternion.z = p2[2];
+//   quaternion.w = p2[3];
+//   console.log({ arrangementIndex });
+// }
+
+// app.post("/setPermutationIndex", (req, res) => {
+//   const { permutationIndex } = req.body;
+
+//   if (typeof permutationIndex === "number") {
+//     arrangementIndex = permutationIndex;
+//     console.log({ arrangementIndex });
+//   }
+
+//   res.send();
+// });

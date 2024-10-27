@@ -428,3 +428,16 @@ BS.DeviceManager.AddEventListener("connectedDevices", (event) => {
     }
   }
 });
+
+const permutationIndexInput = document.getElementById("permutationIndex");
+permutationIndexInput.addEventListener("input", async () => {
+  const permutationIndex = Number(permutationIndexInput.value);
+  const response = await fetch("/setPermutationIndex", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ permutationIndex }),
+  });
+  console.log(response);
+});
