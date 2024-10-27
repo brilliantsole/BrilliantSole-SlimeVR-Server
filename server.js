@@ -8,6 +8,16 @@ import { WebSocketServer } from "ws";
 import * as BS from "brilliantsole/node";
 import * as THREE from "three";
 
+import { MACAddress, Quaternion } from "@slimevr/common";
+import {
+  BoardType,
+  FirmwareFeatureFlags,
+  RotationDataType,
+  SensorStatus,
+  SensorType,
+} from "@slimevr/firmware-protocol";
+import { EmulatedSensor, EmulatedTracker } from "@slimevr/tracker-emulation";
+
 // HTTPS SERVER
 app.use(function (req, res, next) {
   res.header("Cross-Origin-Opener-Policy", "same-origin");
@@ -37,11 +47,6 @@ webSocketServer.clearSensorConfigurationsWhenNoClients = false;
 webSocketServer.server = wss;
 
 const devicePair = BS.DevicePair.shared;
-
-const eulers = {
-  left: new THREE.Euler(0, 0, 0, "ZXY"),
-  right: new THREE.Euler(0, 0, 0, "ZXY"),
-};
 
 const inverseGameRotation = {
   left: new THREE.Quaternion(),
@@ -100,6 +105,84 @@ app.get("/resetRotation", (req, res) => {
   res.send();
 });
 
+/** @type {Object<string, EmulatedTracker>} */
+const trackers = {};
+/** @type {Object<string, EmulatedSensor[]>} */
+const trackerSensors = {};
+/** @type {Object<string, Quaternion>} */
+const trackerQuaternions = {};
+
+devicePair.addEventListener("deviceIsConnected", async (event) => {
+  const { side, device } = event.message;
+
+  if (!device.isConnected) {
+    const tracker = trackers[side];
+    if (tracker) {
+      console.log(`removing ${side} tracker`);
+      tracker.disconnectFromServer();
+      tracker.deinit();
+    }
+  } else {
+    const existingTracker = trackers[side];
+    if (existingTracker) {
+      if (existingTracker.device == device) {
+        console.log(`existing ${side} tracker reconnected`);
+        existingTracker.init();
+        return;
+      } else {
+        console.log(`replacing existing ${side} tracker`);
+        existingTracker.disconnectFromServer();
+        existingTracker.deinit();
+      }
+    }
+
+    console.log(`creating ${side} tracker...`);
+
+    // emulating a consistent mac address using the device hardware id...
+    const firstSixBytesHex = device.id.slice(0, 12);
+    const macAddressBytes = [];
+    for (let i = 0; i < firstSixBytesHex.length; i += 2) {
+      const byte = parseInt(firstSixBytesHex.slice(i, i + 2), 16);
+      macAddressBytes.push(byte);
+    }
+
+    const macAddress = new MACAddress(macAddressBytes);
+
+    const tracker = new EmulatedTracker(macAddress, "0.0.1", new FirmwareFeatureFlags(new Map()), BoardType.CUSTOM);
+    trackers[side] = tracker;
+
+    tracker.on("ready", (ip, port) => console.log(`ready and running on ${ip}:${port}`));
+    tracker.on("unready", () => console.log("unready"));
+
+    tracker.on("error", (err) => console.error(err));
+
+    tracker.on("searching-for-server", () => console.log("searching for server..."));
+    tracker.on("stopped-searching-for-server", () => console.log("stopped searching for server"));
+
+    tracker.on("connected-to-server", (ip, port) => console.log("connected to server", ip, port));
+    tracker.on("disconnected-from-server", (reason) => {
+      console.log("disconnected from server", reason);
+      tracker.searchForServer();
+    });
+
+    tracker.on("server-feature-flags", (flags) => console.log("server feature flags", flags.getAllEnabled()));
+
+    tracker.on("incoming-packet", (packet) => console.log("incoming packet", packet));
+    tracker.on("unknown-incoming-packet", (buf) => console.log("unknown packet", buf));
+    tracker.on("outgoing-packet", (packet) => console.log("outgoing packet", packet));
+
+    await tracker.init();
+
+    trackerSensors[side] = await tracker.addSensor(SensorType.UNKNOWN, SensorStatus.OK);
+  }
+});
+
+devicePair.addEventListener("deviceBatteryLevel", (event) => {
+  const { side, batteryLevel } = event.message;
+  const tracker = trackers[side];
+  tracker.changeBatteryLevel(3.7, batteryLevel);
+});
+
 devicePair.addEventListener("deviceSensorData", (event) => {
   const { side, sensorType } = event.message;
   let isRotation = false;
@@ -109,38 +192,24 @@ devicePair.addEventListener("deviceSensorData", (event) => {
         const quaternion = gameRotation[side];
         quaternion.copy(event.message.gameRotation);
         quaternion.premultiply(inverseGameRotation[side]);
-
-        const euler = eulers[side];
-        euler.setFromQuaternion(quaternion);
-        const [pitch, yaw, roll, order] = euler.toArray();
-        args = [-pitch, -yaw, roll].map((value) => {
-          return {
-            type: "f",
-            value: THREE.MathUtils.radToDeg(value),
-          };
-        });
         latestGameRotation[side].copy(event.message.gameRotation);
-        isRotation = true;
+
+        const { w, x, y, z } = quaternion;
+        trackerQuaternions[side] = new Quaternion(x, y, z, w);
       }
+      isRotation = true;
       break;
     case "rotation":
       {
         const quaternion = rotation[side];
         quaternion.copy(event.message.rotation);
         quaternion.premultiply(inverseRotation[side]);
-
-        const euler = eulers[side];
-        euler.setFromQuaternion(quaternion);
-        const [pitch, yaw, roll, order] = euler.toArray();
-        args = [-pitch, -yaw, roll].map((value) => {
-          return {
-            type: "f",
-            value: THREE.MathUtils.radToDeg(value),
-          };
-        });
         latestRotation[side].copy(event.message.rotation);
-        isRotation = true;
+
+        const { w, x, y, z } = quaternion;
+        trackerQuaternions[side] = new Quaternion(x, y, z, w);
       }
+      isRotation = true;
       break;
     default:
       break;
@@ -152,6 +221,17 @@ devicePair.addEventListener("deviceSensorData", (event) => {
       return;
     }
 
-    // FILL
+    const trackerQuaternion = trackerQuaternions[side];
+    if (!trackerQuaternion) {
+      console.log("no trackerQuaternion defined");
+      return;
+    }
+
+    const trackerSensor = trackerSensors[side];
+    if (!trackerSensor) {
+      console.log("no trackerSensor defined");
+      return;
+    }
+    trackerSensor.sendRotation(RotationDataType.NORMAL, trackerQuaternion, 0);
   }
 });

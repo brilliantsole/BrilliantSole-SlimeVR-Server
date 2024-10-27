@@ -76,6 +76,27 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+"@slimevr/common@0.1.2", "@slimevr/common@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@slimevr/common/-/common-0.1.2.tgz#84c41a05ef811a861fb5c4c1eab4e15ff47489fa"
+  integrity sha512-KAqiNRx81VM3znuesTE7lNO9DTYN4MJeuIzfGQdjGdHXtPDbWkvAwXlmAVP7TfSGtovjSp27cwh6WyHY1O9+yA==
+
+"@slimevr/firmware-protocol@0.6.5", "@slimevr/firmware-protocol@^0.6.5":
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/@slimevr/firmware-protocol/-/firmware-protocol-0.6.5.tgz#692a206b11eee14d7be54d0c942ec04a99d13343"
+  integrity sha512-jDHat7f/PPtqhN95/a3bGuuqpGLSVVGQQmZurdW4tMa/NZsKzGirnPrmD/L9XrxhIsTA2huTMNkSYkEFziTaIw==
+  dependencies:
+    "@slimevr/common" "0.1.2"
+
+"@slimevr/tracker-emulation@^0.2.4":
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/@slimevr/tracker-emulation/-/tracker-emulation-0.2.4.tgz#72b377ba220c8952a7af6b2949da0b0ab1799c13"
+  integrity sha512-D4mYf55DQK/AtfbWQc9U4+ex4QHXvetIRQzS90wJ19smG3BwOLovfiTp6Q4y6lO36swxJFYzNkDA2ikOkEMTKg==
+  dependencies:
+    "@slimevr/common" "0.1.2"
+    "@slimevr/firmware-protocol" "0.6.5"
+    strict-event-emitter-types "^2.0.0"
+
 "@types/w3c-web-usb@^1.0.6":
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/@types/w3c-web-usb/-/w3c-web-usb-1.0.10.tgz#cf89cccd2d93b6245e784c19afe0a9f5038d4528"
@@ -1364,6 +1385,11 @@ qs@6.13.0:
   dependencies:
     side-channel "^1.0.6"
 
+quaternion@^1.6.5:
+  version "1.6.5"
+  resolved "https://registry.yarnpkg.com/quaternion/-/quaternion-1.6.5.tgz#0bea5bb7fce1eeb2f116f59dd39514e6a10a79a9"
+  integrity sha512-twQ544NPLbwSktOmFXVUo4e2u3ROqXcxJuBw1JnJGwQf2/EBuVkEdT9GnkumuCV2tPT7+kkVyr7oWb6iQIcxaw==
+
 range-parser@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.1.tgz#3cf37023d199e1c24d1a55b84800c2f3e6468031"
@@ -1570,6 +1596,11 @@ statuses@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
+
+strict-event-emitter-types@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/strict-event-emitter-types/-/strict-event-emitter-types-2.0.0.tgz#05e15549cb4da1694478a53543e4e2f4abcf277f"
+  integrity sha512-Nk/brWYpD85WlOgzw5h173aci0Teyv8YdIAEtV+N88nDB0dLlazZyJMIsN6eo1/AR61l+p6CJTG1JIyFaoNEEA==
 
 "string-width-cjs@npm:string-width@^4.2.0", "string-width@^1.0.2 || 2 || 3 || 4", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
