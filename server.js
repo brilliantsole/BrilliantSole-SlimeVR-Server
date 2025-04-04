@@ -46,7 +46,7 @@ const webSocketServer = new BS.WebSocketServer();
 webSocketServer.clearSensorConfigurationsWhenNoClients = false;
 webSocketServer.server = wss;
 
-const devicePair = BS.DevicePair.shared;
+const insolesPair = BS.DevicePair.insoles;
 
 const inverseGameRotation = {
   left: new THREE.Quaternion(),
@@ -112,7 +112,7 @@ const trackerSensors = {};
 /** @type {Object<string, Quaternion>} */
 const trackerQuaternions = {};
 
-devicePair.addEventListener("deviceIsConnected", async (event) => {
+insolesPair.addEventListener("deviceIsConnected", async (event) => {
   const { side, device } = event.message;
 
   if (!device.isConnected) {
@@ -148,42 +148,66 @@ devicePair.addEventListener("deviceIsConnected", async (event) => {
 
     const macAddress = new MACAddress(macAddressBytes);
 
-    const tracker = new EmulatedTracker(macAddress, "0.0.1", new FirmwareFeatureFlags(new Map()), BoardType.CUSTOM);
+    const tracker = new EmulatedTracker(
+      macAddress,
+      "0.0.1",
+      new FirmwareFeatureFlags(new Map()),
+      BoardType.CUSTOM
+    );
     trackers[side] = tracker;
 
-    tracker.on("ready", (ip, port) => console.log(`ready and running on ${ip}:${port}`));
+    tracker.on("ready", (ip, port) =>
+      console.log(`ready and running on ${ip}:${port}`)
+    );
     tracker.on("unready", () => console.log("unready"));
 
     tracker.on("error", (err) => console.error(err));
 
-    tracker.on("searching-for-server", () => console.log("searching for server..."));
-    tracker.on("stopped-searching-for-server", () => console.log("stopped searching for server"));
+    tracker.on("searching-for-server", () =>
+      console.log("searching for server...")
+    );
+    tracker.on("stopped-searching-for-server", () =>
+      console.log("stopped searching for server")
+    );
 
-    tracker.on("connected-to-server", (ip, port) => console.log("connected to server", ip, port));
+    tracker.on("connected-to-server", (ip, port) =>
+      console.log("connected to server", ip, port)
+    );
     tracker.on("disconnected-from-server", (reason) => {
       console.log("disconnected from server", reason);
       tracker.searchForServer();
     });
 
-    tracker.on("server-feature-flags", (flags) => console.log("server feature flags", flags.getAllEnabled()));
+    tracker.on("server-feature-flags", (flags) =>
+      console.log("server feature flags", flags.getAllEnabled())
+    );
 
-    tracker.on("incoming-packet", (packet) => console.log("incoming packet", packet));
-    tracker.on("unknown-incoming-packet", (buf) => console.log("unknown packet", buf));
-    tracker.on("outgoing-packet", (packet) => console.log("outgoing packet", packet));
+    tracker.on("incoming-packet", (packet) =>
+      console.log("incoming packet", packet)
+    );
+    tracker.on("unknown-incoming-packet", (buf) =>
+      console.log("unknown packet", buf)
+    );
+    tracker.on("outgoing-packet", (packet) =>
+      console.log("outgoing packet", packet)
+    );
 
     await tracker.init();
 
-    trackerSensors[side] = await tracker.addSensor(SensorType.UNKNOWN, SensorStatus.OK);
+    trackerSensors[side] = await tracker.addSensor(
+      SensorType.UNKNOWN,
+      SensorStatus.OK
+    );
   }
 });
 
-devicePair.addEventListener("deviceBatteryLevel", (event) => {
+insolesPair.addEventListener("deviceBatteryLevel", (event) => {
   const { side, batteryLevel } = event.message;
   const tracker = trackers[side];
   tracker.changeBatteryLevel(3.7, batteryLevel);
 });
 
-devicePair.addEventListener("deviceSensorData", (event) => {
+insolesPair.addEventListener("deviceSensorData", (event) => {
   const { side, sensorType } = event.message;
   let isRotation = false;
   switch (sensorType) {
@@ -216,8 +240,13 @@ devicePair.addEventListener("deviceSensorData", (event) => {
   }
 
   if (isRotation) {
-    if (sensorType == "gameRotation" && event.message.device.sensorConfiguration.rotation != 0) {
-      console.warn("not using gameRotation data to rotate foot - rotation data is already enabled");
+    if (
+      sensorType == "gameRotation" &&
+      event.message.device.sensorConfiguration.rotation != 0
+    ) {
+      console.warn(
+        "not using gameRotation data to rotate foot - rotation data is already enabled"
+      );
       return;
     }
 

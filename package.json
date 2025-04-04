@@ -14,7 +14,7 @@
     "@slimevr/common": "^0.1.2",
     "@slimevr/firmware-protocol": "^0.6.5",
     "@slimevr/tracker-emulation": "^0.2.4",
-    "brilliantsole": "^0.0.18",
+    "brilliantsole": "^0.0.27",
     "express": "^4.21.0",
     "ip": "^2.0.1",
     "quaternion": "^1.6.5",
